@@ -1,0 +1,26 @@
+name: Deploy LEONEL INVOICE SYSTEM
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy sur EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 44.222.105.23
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/django-invoice
+            source /home/ubuntu/venv-devops/bin/activate
+            git pull origin main
+            pip install -r requirements.txt
+            python manage.py migrate --noinput
+            python manage.py collectstatic --noinput
+            sudo systemctl restart gunicorn
+            sudo systemctl restart nginx
+            echo "Deploiement termine !"
